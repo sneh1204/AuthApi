@@ -126,6 +126,6 @@ app.get("/users/:uid", (req, res, next) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Stared on http://localhost:${port}`);
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Started on http://localhost:${port}`);
 });
