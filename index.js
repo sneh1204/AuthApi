@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const port = 3000;
@@ -7,125 +8,176 @@ const jwtSecret = "secretsecretsecret";
 
 app.use(express.urlencoded({ extended: true }));
 
-const authMiddleWare = (req, res, next) => {
-  console.log("authMiddleWare");
-  next();
+const uri = "mongodb+srv://root:HdjW4DK9xFxcCbHH@cluster0.rxdum.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+let auth_collection;
+let prof_collection;
+let jwt_blacklist_collection;
+
+client.connect(err => {
+  auth_collection = client.db("users").collection("auth");
+  prof_collection = client.db("users").collection("profiles");
+  jwt_blacklist_collection = client.db("users").collection("jwt_blacklist");
+});
+
+const fetchToken = (email, id) => {
+  return jwt.sign(
+      {email: email, id: id},
+      jwtSecret
+  );
 };
 
-const jwtVerificationMiddleware = (req, res, next) => {
-  console.log("jwtVerificationMiddleware");
+function validateCredentials(res, email, pass){
+  if(!validateEmail(email)){
+    res.status(401).send({error: "Invalid email provided!"});
+    return false;
+  }
+  else if(!validatePass(pass)){
+    res.status(401).send({error: "Invalid pass provided!"});
+    return false;
+  }
+  return true;
+}
 
+function validatePass(pass){
+  return pass.length >= 7;
+}
+
+function validateEmail(email) {
+  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+}
+
+async function profileCheck(res, req){
+  let decoded = req.decodedToken;
+  const id = decoded["id"]
+  if(!id) {
+    res.status(401).send({error: "User id is required" });
+    return false;
+  }
+
+  const cursor = prof_collection.find({_id: req.body["id"]});
+  const result = await cursor.toArray();
+
+  if(result.length < 1){
+    res.status(400).send({error: "User not found"});
+    return false;
+  }
+
+  return result;
+}
+
+const authMiddleWare = async (req, res, next) => {
+
+  if(!("email" in req.body) || !("pass" in req.body)){
+    res.status(401).send({error: "Email/Pass is required to auth!"});
+    return;
+  }
+
+  if(!validateCredentials(res, req.body['email'], req.body['pass'])) return;
+
+  const cursor = auth_collection.find({email: req.body["email"], pass: req.body["pass"]});
+  const result = await cursor.toArray();
+
+  if(result.length < 1){
+    res.status(401).send({error: "Email/Pass not found in database!"});
+    return;
+  }
+
+  console.log("Authenticated - Email - " + req.body["email"]);
+
+  req.body["uid"] = result[0]["_id"];
+  next();
+
+};
+
+const jwtVerificationMiddleware = async (req, res, next) => {
   let token = req.header("x-jwt-token");
   if (token) {
     try {
-      let decoded = jwt.verify(token, jwtSecret);
-      req.decodedToken = decoded;
+      req.decodedToken = jwt.verify(token, jwtSecret);
+      const cursor = jwt_blacklist_collection.find({_id: token});
+      const result = await cursor.toArray();
+
+      if(result.length >= 1){
+        res.status(401).send({error: "Expired token"});
+        return;
+      }
+
       next();
     } catch (err) {
-      res.status(401).send({ error: "In valid token", fullError: err });
+      res.status(401).send({ error: "Invalid token", fullError: err });
     }
   } else {
-    res.status(400).send({ error: "x-jwt-token header is required" });
+    res.status(400).send({ error: "x-jwt-token header is required"});
   }
 };
 
-//middleware ..
-
-const users = [
-  { id: 10, name: "Bob Smith" },
-  { id: 20, name: "Alice Smith" },
-  { id: 30, name: "Tom Smith" },
-];
-
-app.get("/", (req, res, next) => {
-  res.send("Hello World");
-});
-
-app.get("/users", authMiddleWare, (req, res, next) => {
+app.get("/users", jwtVerificationMiddleware, (req, res, next) => {
   res.send({ status: "ok", users: users });
 });
 
-app.post("/api/auth", (req, res, next) => {
-  console.log(req.body);
-  //user is going to provide username/password to authenticate.
-  //assume we have a databse that we can use to check if the username/password match some record
-
-  //create a token
-  //send the token back to the user's app to be used for next requests.
-  let token = jwt.sign(
-    { uid: 10, role: "admin", exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    jwtSecret
-  );
-  res.send({ status: "ok", token: token });
+app.post("/auth/login", authMiddleWare, (req, res, next) => {
+  res.status(200).send({ status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]) });
 });
 
-app.get("/api/protected", jwtVerificationMiddleware, (req, res, next) => {
-  //need to provide a valid token to access this api ..
-  //need to verify the token ..
-  //if token is valid we need to extract the data or payload from the token to get uid/role
-  //else error .. 400
+app.post("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
+  await jwt_blacklist_collection.insertOne({_id: req.header("x-jwt-token")});
+  res.status(200).send({ status: "ok"});
+});
 
-  let decodedToken = req.decodedToken;
-  res.send({ status: "ok", decoded: decodedToken });
+app.post("/auth/signup", async (req, res, next) => {
+
+  if(!("email" in req.body) || !("pass" in req.body)){
+    res.status(401).send({error: "Email/Pass is required to auth!"});
+    return;
+  }
+
+  if(!validateCredentials(res, req.body['email'], req.body['pass'])) return;
+
+  const cursor = auth_collection.find({email: req.body["email"]});
+  const result = await cursor.toArray();
+
+  if(result.length >= 1){
+    res.status(401).send({error: "Email already being used!"});
+    return;
+  }
+
+  const sign_result = await auth_collection.insertOne({email: req.body["email"], pass: req.body["pass"]});
+
+  await prof_collection.insertOne({email: req.body["email"], _id: sign_result.insertedId});
+
+  res.status(200).send({ status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId) });
+
 });
 
 //query parameter
-app.get("/users/profile", (req, res, next) => {
-  console.log(req.query);
-  let uid = req.query.uid;
-  if (uid) {
-    let user = users.find((item) => {
-      return item.id == uid;
-    });
+app.get("/profile/update", jwtVerificationMiddleware, async (req, res, next) => {
+    const profile = await profileCheck(res, req);
+    if(profile === false) return;
 
-    if (user) {
-      res.send({ user: user });
-    } else {
-      res.status(404).send({ error: "User not found" });
+    if(!("email" in req.body) || !("name" in req.body) || !("address" in req.body) || !("age" in req.body) || !("weight" in req.body)){
+      res.status(400).send({error: "Please provide all information to update!"});
+      return;
     }
-  } else {
-    res.status(400).send({ error: "User id is required" });
-  }
+
+    await prof_collection.updateOne({_id: id}, {$set: req.body});
+    res.status(200).send({status: "ok"});
+
 });
 
-app.post("/users/profile", (req, res, next) => {
-  console.log(req.body);
+app.post("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
+    const profile = await profileCheck(res, req);
+    if(profile === false) return;
 
-  let uid = req.body.uid;
-  if (uid) {
-    let user = users.find((item) => {
-      return item.id == uid;
-    });
+    const info = profile[0];
+    console.log(info)
+    res.status(200).send({status: "ok", info: info});
 
-    if (user) {
-      res.send({ user: user });
-    } else {
-      res.status(404).send({ error: "User not found" });
-    }
-  } else {
-    res.status(400).send({ error: "User id is required" });
-  }
 });
 
-//route or path parameter
-app.get("/users/:uid", (req, res, next) => {
-  console.log(req.params);
-  let uid = req.params.uid;
-  if (uid) {
-    let user = users.find((item) => {
-      return item.id == uid;
-    });
-
-    if (user) {
-      res.send({ user: user });
-    } else {
-      res.status(404).send({ error: "User not found" });
-    }
-  } else {
-    res.status(400).send({ error: "User id is required" });
-  }
-});
-
-app.listen(process.env.PORT || 5000, () => {
+app.listen(process.env.PORT || port, () => {
   console.log(`Started on http://localhost:${port}`);
 });
