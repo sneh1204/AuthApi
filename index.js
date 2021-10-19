@@ -54,7 +54,7 @@ async function profileCheck(res, req){
   let decoded = req.decodedToken;
   const id = decoded["id"]
   if(!id) {
-    res.status(401).send({error: "User id is required" });
+    res.status(401).send({error: "User id is required"});
     return false;
   }
 
@@ -115,10 +115,6 @@ const jwtVerificationMiddleware = async (req, res, next) => {
   }
 };
 
-app.get("/users", jwtVerificationMiddleware, (req, res, next) => {
-  res.send({ status: "ok", users: users });
-});
-
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
   res.status(200).send({ status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]) });
 });
@@ -163,7 +159,7 @@ app.get("/profile/update", jwtVerificationMiddleware, async (req, res, next) => 
       return;
     }
 
-    await prof_collection.updateOne({_id: id}, {$set: req.body});
+    await prof_collection.updateOne({_id: req.decodedToken["id"]}, {$set: req.body});
     res.status(200).send({status: "ok"});
 
 });
