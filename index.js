@@ -62,8 +62,6 @@ async function profileCheck(res, req){
   const cursor = prof_collection.find({_id: ObjectId(id)});
   const result = await cursor.toArray();
 
-  console.log(result)
-
   if(result.length < 1){
     res.status(400).send({message: "User not found"});
     return false;
@@ -155,12 +153,14 @@ app.post("/profile/update", jwtVerificationMiddleware, async (req, res, next) =>
     const profile = await profileCheck(res, req);
     if(profile === false) return;
 
-    if(!("email" in req.body) || !("name" in req.body) || !("address" in req.body) || !("age" in req.body) || !("weight" in req.body)){
+    if(!("email" in req.body) || !("fullname" in req.body) || !("address" in req.body) || !("age" in req.body) || !("weight" in req.body)){
       res.status(400).send({message: "Please provide all information to update!"});
       return;
     }
 
-    await prof_collection.updateOne({_id: req.decodedToken["id"]}, {$set: req.body});
+    await auth_collection.updateOne({_id: ObjectId(req.decodedToken["id"])}, {$set: {email : req.body["email"]}});
+    await prof_collection.updateOne({_id: ObjectId(req.decodedToken["id"])}, {$set: req.body});
+
     res.status(200).send({status: "ok"});
 
 });
@@ -172,7 +172,7 @@ app.get("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
     const info = profile[0];
     info["uid"] = info["_id"]
 
-    res.status(200).send({status: "ok", info: info});
+    res.status(200).send(info);
 
 });
 
