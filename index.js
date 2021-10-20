@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId} = require('mongodb');
 
 const app = express();
 const port = 3000;
@@ -59,8 +59,7 @@ async function profileCheck(res, req){
     return false;
   }
 
-  const cursor = prof_collection.find({_id: id});
-  console.log(cursor)
+  const cursor = prof_collection.find({_id: ObjectId(id)});
   const result = await cursor.toArray();
 
   console.log(result)
@@ -121,7 +120,7 @@ app.post("/auth/login", authMiddleWare, (req, res, next) => {
   res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]), email: req.body["email"]});
 });
 
-app.post("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
+app.get("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
   await jwt_blacklist_collection.insertOne({_id: req.header("x-jwt-token")});
   res.status(200).send({status: "ok"});
 });
@@ -171,7 +170,8 @@ app.get("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
     if(profile === false) return;
 
     const info = profile[0];
-    console.log(info)
+    info["uid"] = info["_id"]
+
     res.status(200).send({status: "ok", info: info});
 
 });
