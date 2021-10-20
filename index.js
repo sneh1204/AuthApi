@@ -24,7 +24,7 @@ client.connect(err => {
 
 const fetchToken = (email, id) => {
   return jwt.sign(
-      {email: email, id: id},
+      {email: email, id: id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
       jwtSecret
   );
 };
@@ -53,13 +53,17 @@ function validateEmail(email) {
 async function profileCheck(res, req){
   let decoded = req.decodedToken;
   const id = decoded["id"]
+
   if(!id) {
     res.status(401).send({message: "User id is required"});
     return false;
   }
 
-  const cursor = prof_collection.find({_id: req.body["id"]});
+  const cursor = prof_collection.find({_id: id});
+  console.log(cursor)
   const result = await cursor.toArray();
+
+  console.log(result)
 
   if(result.length < 1){
     res.status(400).send({message: "User not found"});
@@ -162,7 +166,7 @@ app.post("/profile/update", jwtVerificationMiddleware, async (req, res, next) =>
 
 });
 
-app.post("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
+app.get("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
     const profile = await profileCheck(res, req);
     if(profile === false) return;
 
