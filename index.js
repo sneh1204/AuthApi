@@ -80,14 +80,18 @@ const authMiddleWare = async (req, res, next) => {
 
   if(!validateCredentials(res, req.body['email'], req.body['pass'])) return;
 
-  const salt = bcrypt.genSaltSync(10); // hashing
-  const hash = bcrypt.hashSync(req.body["pass"], salt);
-
-  const cursor = auth_collection.find({email: req.body["email"], pass: hash});
+  const cursor = auth_collection.find({email: req.body["email"]});
   const result = await cursor.toArray();
 
   if(result.length < 1){
-    res.status(401).send({message: "Email/Pass not found in database!"});
+    res.status(401).send({message: "Email not found in database!"});
+    return;
+  }
+
+  const pass = result[0]["pass"]
+
+  if(!bcrypt.compareSync(req.body["pass"], pass)){
+    res.status(401).send({message: "Incorrect password!"});
     return;
   }
 
