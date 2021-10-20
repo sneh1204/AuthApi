@@ -31,11 +31,11 @@ const fetchToken = (email, id) => {
 
 function validateCredentials(res, email, pass){
   if(!validateEmail(email)){
-    res.status(401).send({error: "Invalid email provided!"});
+    res.status(401).send({message: "Invalid email provided!"});
     return false;
   }
   else if(!validatePass(pass)){
-    res.status(401).send({error: "Invalid pass provided!"});
+    res.status(401).send({message: "Invalid pass provided!"});
     return false;
   }
   return true;
@@ -54,7 +54,7 @@ async function profileCheck(res, req){
   let decoded = req.decodedToken;
   const id = decoded["id"]
   if(!id) {
-    res.status(401).send({error: "User id is required"});
+    res.status(401).send({message: "User id is required"});
     return false;
   }
 
@@ -62,7 +62,7 @@ async function profileCheck(res, req){
   const result = await cursor.toArray();
 
   if(result.length < 1){
-    res.status(400).send({error: "User not found"});
+    res.status(400).send({message: "User not found"});
     return false;
   }
 
@@ -72,7 +72,7 @@ async function profileCheck(res, req){
 const authMiddleWare = async (req, res, next) => {
 
   if(!("email" in req.body) || !("pass" in req.body)){
-    res.status(401).send({error: "Email/Pass is required to auth!"});
+    res.status(401).send({message: "Email/Pass is required to auth!"});
     return;
   }
 
@@ -82,7 +82,7 @@ const authMiddleWare = async (req, res, next) => {
   const result = await cursor.toArray();
 
   if(result.length < 1){
-    res.status(401).send({error: "Email/Pass not found in database!"});
+    res.status(401).send({message: "Email/Pass not found in database!"});
     return;
   }
 
@@ -102,32 +102,32 @@ const jwtVerificationMiddleware = async (req, res, next) => {
       const result = await cursor.toArray();
 
       if(result.length >= 1){
-        res.status(401).send({error: "Expired token"});
+        res.status(401).send({message: "Expired token"});
         return;
       }
 
       next();
     } catch (err) {
-      res.status(401).send({ error: "Invalid token", fullError: err });
+      res.status(401).send({message: "Invalid token", fullError: err});
     }
   } else {
-    res.status(400).send({ error: "x-jwt-token header is required"});
+    res.status(400).send({message: "x-jwt-token header is required"});
   }
 };
 
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
-  res.status(200).send({ status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]) });
+  res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"])});
 });
 
 app.post("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
   await jwt_blacklist_collection.insertOne({_id: req.header("x-jwt-token")});
-  res.status(200).send({ status: "ok"});
+  res.status(200).send({status: "ok"});
 });
 
 app.post("/auth/signup", async (req, res, next) => {
 
   if(!("email" in req.body) || !("pass" in req.body)){
-    res.status(401).send({error: "Email/Pass is required to auth!"});
+    res.status(401).send({message: "Email/Pass is required to auth!"});
     return;
   }
 
@@ -137,7 +137,7 @@ app.post("/auth/signup", async (req, res, next) => {
   const result = await cursor.toArray();
 
   if(result.length >= 1){
-    res.status(401).send({error: "Email already being used!"});
+    res.status(401).send({message: "Email already being used!"});
     return;
   }
 
@@ -155,7 +155,7 @@ app.get("/profile/update", jwtVerificationMiddleware, async (req, res, next) => 
     if(profile === false) return;
 
     if(!("email" in req.body) || !("name" in req.body) || !("address" in req.body) || !("age" in req.body) || !("weight" in req.body)){
-      res.status(400).send({error: "Please provide all information to update!"});
+      res.status(400).send({message: "Please provide all information to update!"});
       return;
     }
 
