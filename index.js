@@ -15,12 +15,10 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 let auth_collection;
 let prof_collection;
-let jwt_blacklist_collection;
 
 client.connect(err => {
   auth_collection = client.db("users").collection("auth");
   prof_collection = client.db("users").collection("profiles");
-  jwt_blacklist_collection = client.db("users").collection("jwt_blacklist");
 });
 
 const fetchToken = (email, id) => {
@@ -105,14 +103,6 @@ const jwtVerificationMiddleware = async (req, res, next) => {
   if (token) {
     try {
       req.decodedToken = jwt.verify(token, jwtSecret);
-      const cursor = jwt_blacklist_collection.find({_id: token});
-      const result = await cursor.toArray();
-
-      if(result.length >= 1){
-        res.status(401).send({message: "Expired token"});
-        return;
-      }
-
       next();
     } catch (err) {
       res.status(401).send({message: "Invalid token", fullError: err});
@@ -124,11 +114,6 @@ const jwtVerificationMiddleware = async (req, res, next) => {
 
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
   res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]), email: req.body["email"]});
-});
-
-app.get("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
-  await jwt_blacklist_collection.insertOne({_id: req.header("x-jwt-token")});
-  res.status(200).send({status: "ok"});
 });
 
 app.post("/auth/signup", async (req, res, next) => {
