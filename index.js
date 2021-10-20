@@ -86,8 +86,6 @@ const authMiddleWare = async (req, res, next) => {
     return;
   }
 
-  console.log("Authenticated - Email - " + req.body["email"]);
-
   req.body["uid"] = result[0]["_id"];
   next();
 
@@ -126,8 +124,8 @@ app.post("/auth/logout", jwtVerificationMiddleware, async (req, res, next) => {
 
 app.post("/auth/signup", async (req, res, next) => {
 
-  if(!("email" in req.body) || !("pass" in req.body)){
-    res.status(401).send({message: "Email/Pass is required to auth!"});
+  if(!("email" in req.body) || !("pass" in req.body) || !("fullname") in req.body || !("age") in req.body || !("weight") in req.body || !("address") in req.body){
+    res.status(401).send({message: "Email/Pass/Fullname/Age/Weight/Address is required to auth!"});
     return;
   }
 
@@ -143,7 +141,7 @@ app.post("/auth/signup", async (req, res, next) => {
 
   const sign_result = await auth_collection.insertOne({email: req.body["email"], pass: req.body["pass"]});
 
-  await prof_collection.insertOne({email: req.body["email"], _id: sign_result.insertedId});
+  await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"]});
 
   res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"]});
 
@@ -164,7 +162,7 @@ app.post("/profile/update", jwtVerificationMiddleware, async (req, res, next) =>
 
 });
 
-app.get("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
+app.post("/profile/view", jwtVerificationMiddleware, async (req, res, next) => {
     const profile = await profileCheck(res, req);
     if(profile === false) return;
 
