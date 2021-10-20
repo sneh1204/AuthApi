@@ -1,0 +1,219 @@
+{
+	"info": {
+		"_postman_id": "78036654-41d2-4e1d-bd81-06ba1df19684",
+		"name": "auth api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNmRmMmU2MDNiOTRlZGU2NjNlMzM0YSIsImlhdCI6MTYzNDU5NTU1OH0.rmJsZXBNLvGbUUstg4L3WywZhMs3ldAlWQaCt4nvJY4",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "s@s.com",
+							"type": "text"
+						},
+						{
+							"key": "pass",
+							"value": "test123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/auth/login",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "st@s.com",
+							"type": "text"
+						},
+						{
+							"key": "pass",
+							"value": "test123",
+							"type": "text"
+						},
+						{
+							"key": "fullname",
+							"value": "Bob smith",
+							"type": "text"
+						},
+						{
+							"key": "weight",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "Charlotte",
+							"type": "text"
+						},
+						{
+							"key": "age",
+							"value": "20",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/auth/signup",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Profile View",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/profile/view",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"profile",
+						"view"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Profile Update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "st@s.com",
+							"type": "text"
+						},
+						{
+							"key": "fullname",
+							"value": "Bob smith",
+							"type": "text"
+						},
+						{
+							"key": "weight",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "Charlotte",
+							"type": "text"
+						},
+						{
+							"key": "age",
+							"value": "20",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/profile/update",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"profile",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/auth/logout",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
