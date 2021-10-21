@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId} = require('mongodb');
+const {sign} = require("jsonwebtoken");
 
 const app = express();
 const port = 3000;
@@ -125,22 +126,17 @@ app.post("/auth/signup", async (req, res, next) => {
 
   if(!validateCredentials(res, req.body['email'], req.body['pass'])) return;
 
-  const cursor = auth_collection.find({email: req.body["email"]});
-  const result = await cursor.toArray();
-
-  if(result.length >= 1){
-    res.status(401).send({message: "Email already being used!"});
-    return;
-  }
-
   const salt = bcrypt.genSaltSync(10); // hashing
   const hash = bcrypt.hashSync(req.body["pass"], salt);
 
-  const sign_result = await auth_collection.insertOne({email: req.body["email"], pass: hash});
-
-  await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"]});
-
-  res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"]});
+  await auth_collection.insertOne({email: req.body["email"], pass: hash}, async function(err, sign_result){
+    if(err !== undefined && err.code === 11000){
+      res.status(400).send({message: "Email already registered!"});
+      return;
+    }
+    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"]});
+    res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"]});
+  });
 
 });
 
