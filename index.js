@@ -199,7 +199,7 @@ app.post("/auth/signup", async (req, res, next) => {
 
 });
 
-app.post("/product/history", jwtVerificationMiddleware, async (req, res, next) => {
+app.get("/product/history", jwtVerificationMiddleware, async (req, res, next) => {
   let decoded = req.decodedToken;
   const id = decoded["id"]
 

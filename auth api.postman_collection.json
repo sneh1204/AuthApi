@@ -58,7 +58,7 @@
 					"urlencoded": [
 						{
 							"key": "email",
-							"value": "st@s.com",
+							"value": "as@s.com",
 							"type": "text"
 						},
 						{
@@ -183,6 +183,151 @@
 					"path": [
 						"profile",
 						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "id",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "photo",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "price",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "region",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "discount",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/add",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "id",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/get",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Checkout Product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "amount",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/checkout",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"checkout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "History",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/history",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"history"
 					]
 				}
 			},
