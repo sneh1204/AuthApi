@@ -187,33 +187,6 @@
 				}
 			},
 			"response": []
-		},
-		{
-			"name": "Logout",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "x-jwt-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "https://mysterious-beach-05426.herokuapp.com/auth/logout",
-					"protocol": "https",
-					"host": [
-						"mysterious-beach-05426",
-						"herokuapp",
-						"com"
-					],
-					"path": [
-						"auth",
-						"logout"
-					]
-				}
-			},
-			"response": []
 		}
 	]
 }

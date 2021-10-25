@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
+const braintree = require('braintree');
 const { MongoClient, ObjectId} = require('mongodb');
 const {sign} = require("jsonwebtoken");
 
@@ -16,18 +17,31 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 let auth_collection;
 let prof_collection;
+let item_collection;
+let trans_collection;
 
 client.connect(err => {
   auth_collection = client.db("users").collection("auth");
   prof_collection = client.db("users").collection("profiles");
+  item_collection = client.db("shopping").collection("items");
+  trans_collection = client.db("shopping").collection("transactions");
 });
 
-const fetchToken = (email, id) => {
+const fetchToken = (email, id, cId) => {
   return jwt.sign(
-      {email: email, id: id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
+      {email: email, id: id, cId: cId, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
       jwtSecret
   );
 };
+
+function braintreeGateway(){
+  return new braintree.BraintreeGateway({
+    environment: braintree.Environment.Sandbox,
+    merchantId: "ydpk693348pyrhyy",
+    publicKey: "2kz8733dpr6h992q",
+    privateKey: "6ce703ae4071e9f0331e655159ca0603"
+  });
+}
 
 function validateCredentials(res, email, pass){
   if(!validateEmail(email)){
@@ -95,6 +109,7 @@ const authMiddleWare = async (req, res, next) => {
   }
 
   req.body["uid"] = result[0]["_id"];
+  req.body["cId"] = result[0]["customerId"];
   next();
 
 };
@@ -114,7 +129,39 @@ const jwtVerificationMiddleware = async (req, res, next) => {
 };
 
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
-  res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]), email: req.body["email"]});
+  res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"], req.body["cId"]), cId: req.body["cId"], email: req.body["email"]});
+});
+
+app.post("/product/add", async (req, res, next) => {
+
+  if(!("id" in req.body) || !("discount" in req.body) || !("name" in req.body) || !("photo") in req.body || !("price") in req.body || !("region") in req.body){
+    res.status(401).send({message: "ID/Name/Photo/Price/Region/Discount is required to add product!"});
+    return;
+  }
+
+  await item_collection.insertOne({_id: req.body["id"], name: req.body["name"], photo: req.body["photo"], price: req.body["price"], region: req.body["region"], discount: req.body["discount"]});
+
+  res.status(200).send({status: "ok", id: sign_result.insertedId});
+
+});
+
+app.post("/product/get", async (req, res, next) => {
+
+  if(!("id" in req.body)){
+    res.status(401).send({message: "ID is required to view product!"});
+    return;
+  }
+
+  const cursor = item_collection.find({_id: ObjectId(req.body["id"])});
+  const result = await cursor.toArray();
+
+  if(result.length < 1){
+    res.status(400).send({message: "Item not found"});
+    return false;
+  }
+
+  res.status(200).send(result[0]);
+
 });
 
 app.post("/auth/signup", async (req, res, next) => {
@@ -134,10 +181,61 @@ app.post("/auth/signup", async (req, res, next) => {
       res.status(400).send({message: "Email already registered!"});
       return;
     }
-    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"]});
-    res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"]});
+
+    let cId = ""
+    const gateway = braintreeGateway();
+    gateway.customer.create({
+      firstName: req.body["fullname"],
+      email: req.body["email"],
+    }, function (err, result) {
+      if(result.success){
+        cId = result.customer.id;
+      }
+    });
+
+    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"], customerId: cId});
+    res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"], cId: cId});
   });
 
+});
+
+app.post("/product/history", jwtVerificationMiddleware, async (req, res, next) => {
+  let decoded = req.decodedToken;
+  const id = decoded["id"]
+
+  if(!id) {
+    res.status(401).send({message: "User id is required"});
+    return false;
+  }
+
+  const cursor = trans_collection.find({_id: ObjectId(id)});
+  const result = await cursor.toArray();
+
+  if(result.length < 1){
+    res.status(200).send({});
+  }else{
+    res.status(200).send(result[0]);
+  }
+
+});
+
+app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) => {
+  const gateway = braintreeGateway();
+  let decoded = req.decodedToken;
+
+  gateway.transaction.sale({
+    amount: req.body["amount"],
+    paymentMethodNonce: req.body["paymentMethodNonce"],
+    options: {
+      submitForSettlement: true
+    }
+  }, async (err, result) => {
+    if(result.success){
+      await trans_collection.insertOne({_id: decoded["id"]}, {$addToSet: {orders: req.body}});
+    }else{
+      res.status(401).send({error: err});
+    }
+  })
 });
 
 //query parameter
