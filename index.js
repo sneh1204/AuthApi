@@ -164,6 +164,20 @@ app.post("/product/get", async (req, res, next) => {
 
 });
 
+app.get("/product/getAll", async (req, res, next) => {
+
+  const cursor = item_collection.find({});
+  const result = await cursor.toArray();
+
+  if(result.length < 1){
+    res.status(400).send({message: "Items not found"});
+    return false;
+  }
+
+  res.status(200).send(result);
+
+});
+
 app.post("/auth/signup", async (req, res, next) => {
 
   if(!("email" in req.body) || !("pass" in req.body) || !("fullname") in req.body || !("age") in req.body || !("weight") in req.body || !("address") in req.body){
