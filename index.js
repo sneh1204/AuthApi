@@ -139,7 +139,7 @@ app.post("/product/add", async (req, res, next) => {
     return;
   }
 
-  await item_collection.insertOne({_id: req.body["id"], name: req.body["name"], photo: req.body["photo"], price: req.body["price"], region: req.body["region"], discount: req.body["discount"]});
+  const sign_result = await item_collection.insertOne({_id: req.body["id"], name: req.body["name"], photo: req.body["photo"], price: req.body["price"], region: req.body["region"], discount: req.body["discount"]});
 
   res.status(200).send({status: "ok", id: sign_result.insertedId});
 
