@@ -276,6 +276,27 @@
 			"response": []
 		},
 		{
+			"name": "Get All Products",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/getAll",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"getAll"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Checkout Product",
 			"request": {
 				"method": "POST",
