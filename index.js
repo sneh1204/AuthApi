@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const braintree = require('braintree');
+const items = require('./discount.json');
 const { MongoClient, ObjectId} = require('mongodb');
 const {sign} = require("jsonwebtoken");
 
@@ -130,6 +131,22 @@ const jwtVerificationMiddleware = async (req, res, next) => {
 
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
   res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"], req.body["cId"]), cId: req.body["cId"], email: req.body["email"]});
+});
+
+app.get("/product/addAll", async (req, res, next) => {
+
+  let products = items.results;
+
+  console.log(products)
+
+  for (let i = 0; i < products.length; i++) {
+    let product = products[i];
+    await item_collection.insertOne({_id: i, name: product.name, photo: product.photo, price: product.price, region: product.region, discount: product.discount}, async function(err, sign_result){
+    });
+  }
+
+  res.status(200).send({status: "ok"});
+
 });
 
 app.post("/product/add", async (req, res, next) => {
