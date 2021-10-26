@@ -139,9 +139,15 @@ app.post("/product/add", async (req, res, next) => {
     return;
   }
 
-  const sign_result = await item_collection.insertOne({_id: req.body["id"], name: req.body["name"], photo: req.body["photo"], price: req.body["price"], region: req.body["region"], discount: req.body["discount"]});
+  await item_collection.insertOne({_id: req.body["id"], name: req.body["name"], photo: req.body["photo"], price: req.body["price"], region: req.body["region"], discount: req.body["discount"]}, async function(err, sign_result){
+    if(err !== undefined && err.code === 11000){
+      res.status(400).send({message: "Item already registered!"});
+      return;
+    }
 
-  res.status(200).send({status: "ok", id: sign_result.insertedId});
+    res.status(200).send({status: "ok", id: sign_result.insertedId});
+
+  });
 
 });
 
