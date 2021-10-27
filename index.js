@@ -217,21 +217,17 @@ app.post("/auth/signup", async (req, res, next) => {
       return;
     }
 
-    let cId = ""
-
     const gateway = braintreeGateway();
     gateway.customer.create({
       firstName: req.body["fullname"],
       email: req.body["email"],
-    }, function (err, result) {
-      console.log(err + result)
+    }, async function (err, result) {
       if(result.success){
-        cId = result.customer.id;
+        let cId = result.customer.id;
+        await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], address: req.body["address"], customerId: cId});
+        res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"], cId: cId});
       }
     });
-
-    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], address: req.body["address"], customerId: cId});
-    res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"], cId: cId});
   });
 
 });
@@ -251,14 +247,35 @@ app.get("/product/history", jwtVerificationMiddleware, async (req, res, next) =>
   if(result.length < 1){
     res.status(200).send({});
   }else{
-    res.status(200).send(result[0]);
+    res.status(200).send(result[0]["trans"]);
   }
+
+});
+
+app.post("/product/clienttoken", jwtVerificationMiddleware, async (req, res, next) => {
+
+  if(!("customerId" in req.body)){
+    res.status(401).send({message: "CustomerId is required to sign up!"});
+    return;
+  }
+
+  const gateway = braintreeGateway();
+  gateway.clientToken.generate({
+    customerId: req.body["customerId"]
+  }, function (err, response) {
+    res.status(200).send(response.clientToken);
+  });
 
 });
 
 app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) => {
   const gateway = braintreeGateway();
   let decoded = req.decodedToken;
+
+  if(!("paymentMethodNonce" in req.body) || !("stamp" in req.body) || !("amount" in req.body) || !("products" in req.body)){
+    res.status(400).send({message: "Please provide all information to checkout! Stamp/Amount/Products/paymentMethodNonce"});
+    return;
+  }
 
   gateway.transaction.sale({
     amount: req.body["amount"],
@@ -268,9 +285,10 @@ app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) 
     }
   }, async (err, result) => {
     if(result.success){
-      await trans_collection.insertOne({_id: decoded["id"]}, {$addToSet: {orders: req.body}});
+      await trans_collection.updateOne({_id: ObjectId(decoded["id"])}, {"$addToSet" : {trans: {tId: result.transaction.id, amount: req.body["amount"], stamp: req.body["stamp"], products: req.body["products"]}}}, {upsert: true});
+      res.status(200).send({status: "ok"});
     }else{
-      res.status(401).send({error: err});
+      res.status(401).send({message: err});
     }
   })
 });
