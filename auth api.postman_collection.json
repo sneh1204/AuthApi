@@ -72,18 +72,8 @@
 							"type": "text"
 						},
 						{
-							"key": "weight",
-							"value": "10",
-							"type": "text"
-						},
-						{
 							"key": "address",
 							"value": "Charlotte",
-							"type": "text"
-						},
-						{
-							"key": "age",
-							"value": "20",
 							"type": "text"
 						}
 					]
@@ -111,7 +101,7 @@
 				"header": [
 					{
 						"key": "x-jwt-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzg2ZWZiMDk1YzhkMDg1YTMzYzA5NyIsImV4cCI6MTYzNTMwMDQ1MSwiaWF0IjoxNjM1Mjk2ODUxfQ.nJzd0ikXy3bOCvrccqVfF4ZXZ_iv-QvzVExf_cMLv-o",
 						"type": "text"
 					}
 				],
@@ -198,32 +188,32 @@
 					"urlencoded": [
 						{
 							"key": "id",
-							"value": "",
+							"value": "1",
 							"type": "text"
 						},
 						{
 							"key": "name",
-							"value": "",
+							"value": "Cro",
 							"type": "text"
 						},
 						{
 							"key": "photo",
-							"value": "",
+							"value": "pineapple.png",
 							"type": "text"
 						},
 						{
 							"key": "price",
-							"value": "",
+							"value": "1.18",
 							"type": "text"
 						},
 						{
 							"key": "region",
-							"value": "",
+							"value": "produce",
 							"type": "text"
 						},
 						{
 							"key": "discount",
-							"value": "",
+							"value": "10",
 							"type": "text"
 						}
 					]
@@ -248,13 +238,19 @@
 			"name": "Get Product",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "urlencoded",
 					"urlencoded": [
 						{
 							"key": "id",
-							"value": "",
+							"value": "1",
 							"type": "text"
 						}
 					]
@@ -279,7 +275,13 @@
 			"name": "Get All Products",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "https://mysterious-beach-05426.herokuapp.com/product/getAll",
 					"protocol": "https",
@@ -297,16 +299,64 @@
 			"response": []
 		},
 		{
+			"name": "Client Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "customerId",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://mysterious-beach-05426.herokuapp.com/product/clienttoken",
+					"protocol": "https",
+					"host": [
+						"mysterious-beach-05426",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"product",
+						"clienttoken"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Checkout Product",
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "x-jwt-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNAcy5jb20iLCJpZCI6IjYxNzA2ZDQwZGI3MTcyZmJhOGNjYzNlMSIsImlhdCI6MTYzNDc1OTYxNX0.f5WFDrw6upI0PuYbsaA1j61WW8qQfFK3FAFGE3JMVm8",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "urlencoded",
 					"urlencoded": [
 						{
 							"key": "amount",
-							"value": "",
+							"value": "5",
+							"type": "text"
+						},
+						{
+							"key": "products",
+							"value": "{}",
 							"type": "text"
 						}
 					]
