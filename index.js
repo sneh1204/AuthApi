@@ -3,8 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const braintree = require('braintree');
 const items = require('./discount.json');
-const { MongoClient, ObjectId} = require('mongodb');
-const {sign} = require("jsonwebtoken");
+const {MongoClient, ObjectId} = require('mongodb');
 
 const app = express();
 const port = 3000;
@@ -28,9 +27,9 @@ client.connect(err => {
   trans_collection = client.db("shopping").collection("transactions");
 });
 
-const fetchToken = (email, id, cId) => {
+const fetchToken = (email, id) => {
   return jwt.sign(
-      {email: email, id: id, cId: cId, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
+      {email: email, id: id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
       jwtSecret
   );
 };
@@ -110,7 +109,11 @@ const authMiddleWare = async (req, res, next) => {
   }
 
   req.body["uid"] = result[0]["_id"];
-  req.body["cId"] = result[0]["customerId"];
+
+  if("customerId" in result[0]) {
+    req.body["cId"] = result[0]["customerId"];
+  }
+
   next();
 
 };
@@ -130,7 +133,11 @@ const jwtVerificationMiddleware = async (req, res, next) => {
 };
 
 app.post("/auth/login", authMiddleWare, (req, res, next) => {
-  res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"], req.body["cId"]), cId: req.body["cId"], email: req.body["email"]});
+  if("cId" in req.body){
+    res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]), cId: req.body["cId"], email: req.body["email"]});
+  }else{
+    res.status(200).send({status: "ok", uid: req.body["uid"], token: fetchToken(req.body["email"], req.body["uid"]), email: req.body["email"]});
+  }
 });
 
 app.get("/product/addAll", async (req, res, next) => {
@@ -196,6 +203,29 @@ app.get("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => 
   }
 
   res.status(200).send(result);
+
+});
+
+app.post("/auth/signup2", async (req, res, next) => {
+
+  if(!("email" in req.body) || !("pass" in req.body) || !("fullname") in req.body || !("address") in req.body || !("age") in req.body || !("weight") in req.body ){
+    res.status(401).send({message: "Email/Pass/Fullname/Address/Age/Weight is required to sign up!"});
+    return;
+  }
+
+  if(!validateCredentials(res, req.body['email'], req.body['pass'])) return;
+
+  const salt = bcrypt.genSaltSync(10); // hashing
+  const hash = bcrypt.hashSync(req.body["pass"], salt);
+
+  await auth_collection.insertOne({email: req.body["email"], pass: hash}, async function(err, sign_result){
+    if(err !== undefined && err.code === 11000){
+      res.status(400).send({message: "Email already registered!"});
+      return;
+    }
+    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], address: req.body["address"], age: req.body["age"], weight: req.body["weight"]});
+    res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"]});
+  });
 
 });
 
