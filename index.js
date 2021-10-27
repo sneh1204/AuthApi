@@ -281,10 +281,11 @@ app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) 
     amount: req.body["amount"],
     paymentMethodNonce: req.body["paymentMethodNonce"],
     options: {
-      submitForSettlement: true
+      submitForSettlement: true,
+      verifyCard: true
     }
   }, async (err, result) => {
-    if(result.success){
+    if(result !== undefined && result.success){
       await trans_collection.updateOne({_id: ObjectId(decoded["id"])}, {"$addToSet" : {trans: {tId: result.transaction.id, amount: req.body["amount"], stamp: req.body["stamp"], products: req.body["products"]}}}, {upsert: true});
       res.status(200).send({status: "ok"});
     }else{
