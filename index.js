@@ -137,8 +137,6 @@ app.get("/product/addAll", async (req, res, next) => {
 
   let products = items.results;
 
-  console.log(products)
-
   for (let i = 0; i < products.length; i++) {
     let product = products[i];
     await item_collection.insertOne({_id: i, name: product.name, photo: product.photo, price: product.price, region: product.region, discount: product.discount}, async function(err, sign_result){
@@ -175,7 +173,7 @@ app.post("/product/get", async (req, res, next) => {
     return;
   }
 
-  const cursor = item_collection.find({_id: ObjectId(req.body["id"])});
+  const cursor = item_collection.find({_id: parseInt(req.body["id"])});
   const result = await cursor.toArray();
 
   if(result.length < 1){
@@ -187,7 +185,7 @@ app.post("/product/get", async (req, res, next) => {
 
 });
 
-app.get("/product/getAll", async (req, res, next) => {
+app.get("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => {
 
   const cursor = item_collection.find({});
   const result = await cursor.toArray();
@@ -203,8 +201,8 @@ app.get("/product/getAll", async (req, res, next) => {
 
 app.post("/auth/signup", async (req, res, next) => {
 
-  if(!("email" in req.body) || !("pass" in req.body) || !("fullname") in req.body || !("age") in req.body || !("weight") in req.body || !("address") in req.body){
-    res.status(401).send({message: "Email/Pass/Fullname/Age/Weight/Address is required to auth!"});
+  if(!("email" in req.body) || !("pass" in req.body) || !("fullname") in req.body || !("address") in req.body){
+    res.status(401).send({message: "Email/Pass/Fullname/Address is required to sign up!"});
     return;
   }
 
@@ -220,17 +218,19 @@ app.post("/auth/signup", async (req, res, next) => {
     }
 
     let cId = ""
+
     const gateway = braintreeGateway();
     gateway.customer.create({
       firstName: req.body["fullname"],
       email: req.body["email"],
     }, function (err, result) {
+      console.log(err + result)
       if(result.success){
         cId = result.customer.id;
       }
     });
 
-    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], age: req.body["age"], weight: req.body["weight"], address: req.body["address"], customerId: cId});
+    await prof_collection.insertOne({_id: sign_result.insertedId, email: req.body["email"], fullname: req.body["fullname"], address: req.body["address"], customerId: cId});
     res.status(200).send({status: "ok", uid: sign_result.insertedId, token: fetchToken(req.body["email"], sign_result.insertedId), email: req.body["email"], cId: cId});
   });
 
