@@ -281,8 +281,7 @@ app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) 
     amount: req.body["amount"],
     paymentMethodNonce: req.body["paymentMethodNonce"],
     options: {
-      submitForSettlement: true,
-      verifyCard: true
+      submitForSettlement: true
     }
   }, async (err, result) => {
     if(result !== undefined && result.success){
