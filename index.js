@@ -288,9 +288,11 @@ app.post("/product/checkout", jwtVerificationMiddleware, async (req, res, next) 
       await trans_collection.updateOne({_id: ObjectId(decoded["id"])}, {"$addToSet" : {trans: {tId: result.transaction.id, amount: req.body["amount"], stamp: req.body["stamp"], products: req.body["products"]}}}, {upsert: true});
       res.status(200).send({status: "ok"});
     }else{
-      if("type" in err && err["type"] === "invalidKeysError"){
+      if(err !== null && "type" in err && err["type"] === "invalidKeysError"){
         res.status(401).send({message: "Invalid Card provided."});
-      }else{
+      }else if(!result.success){
+        res.status(401).send({message: result.message});
+      }else {
         res.status(401).send({message: err});
       }
     }
