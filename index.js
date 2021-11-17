@@ -194,11 +194,6 @@ app.post("/product/get", async (req, res, next) => {
 
 app.get("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => {
 
-  if(!("region" in req.body)){
-    res.status(401).send({message: "Region is required to view all products!"});
-    return;
-  }
-
   let region = req.body["region"] ?? null;
 
   let cursor;
