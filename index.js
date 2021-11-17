@@ -192,7 +192,7 @@ app.post("/product/get", async (req, res, next) => {
 
 });
 
-app.get("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => {
+app.post("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => {
 
   let region = req.body["region"] ?? null;
 
