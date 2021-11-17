@@ -194,7 +194,17 @@ app.post("/product/get", async (req, res, next) => {
 
 app.get("/product/getAll", jwtVerificationMiddleware, async (req, res, next) => {
 
-  const cursor = item_collection.find({});
+  if(!("region" in req.body)){
+    res.status(401).send({message: "Region is required to view all products!"});
+    return;
+  }
+
+  let region = req.body["region"] ?? null;
+
+  let cursor;
+  if(region != null) cursor = item_collection.find({region: region});
+  else cursor = item_collection.find({});
+
   const result = await cursor.toArray();
 
   if(result.length < 1){
